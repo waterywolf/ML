@@ -1,0 +1,63 @@
+import pandas as pd
+from mlxtend.frequent_patterns import apriori, association_rules
+import matplotlib.pyplot as plt
+
+data = pd.read_csv('/Market_Basket_Optimisation.csv', header=None)
+transactions = []
+
+for i in range(0, data.shape[0]):
+    transaction = [str(data.values[i, j]) for j in range(0, data.shape[1]) if str(data.values[i, j]) != 'nan']
+    transactions.append(transaction)
+
+from mlxtend.preprocessing import TransactionEncoder
+
+te = TransactionEncoder()
+te_ary = te.fit(transactions).transform(transactions)
+df = pd.DataFrame(te_ary, columns=te.columns_)
+
+frequent_itemsets = apriori(df, min_support=0.01, use_colnames=True)
+
+rules = association_rules(frequent_itemsets, metric='confidence', min_threshold=0.2)
+
+print("Association Rules:")
+print(rules)
+
+plt.scatter(rules['support'], rules['confidence'], alpha=0.5)
+plt.xlabel('Support')
+plt.ylabel('Confidence')
+plt.title('Support vs Confidence')
+plt.show()
+
+rules_high_confidence = association_rules(frequent_itemsets, metric='confidence', min_threshold=0.5)
+print("Association Rules with Higher Confidence:")
+print(rules_high_confidence)
+
+
+
+
+import pandas as pd
+from mlxtend.frequent_patterns import apriori, association_rules
+
+data = {
+    'milk': [1, 1, 1, 0, 0],
+    'bread': [1, 1, 0, 1, 1],
+    'butter': [0, 1, 1, 1, 1],
+    'jam': [0, 1, 0, 0, 1],
+    'cereal': [1, 0, 0, 1, 1]
+}
+
+df = pd.DataFrame(data)
+
+print("Dataset:")
+print(df)
+
+frequent_itemsets = apriori(df, min_support=0.6, use_colnames=True)
+
+print("\nFrequent Itemsets:")
+print(frequent_itemsets)
+
+rules = association_rules(frequent_itemsets, metric='confidence', min_threshold=0.7)
+
+print("\nAssociation Rules:")
+print(rules)
+
