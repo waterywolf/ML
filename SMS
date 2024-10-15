@@ -1,9 +1,14 @@
-import numpy as np
 import pandas as pd
-df = pd.read_csv('/content/spam.csv',encoding='ISO-8859-1')
+
+# Correct the file path by removing extra quotes and using a raw string
+df = pd.read_csv(r'C:\Misc\SMSSpamCollection', sep='\t', header=None, names=['v1', 'v2'])
+
+# Display the first few rows of the dataframe
 df.head()
 
+# Check the data information
 df.info()
+
 
 df.groupby('v1').describe()
 
