@@ -1,41 +1,64 @@
 import pandas as pd
+from sklearn.model_selection import train_test_split as tts
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import classification_report, confusion_matrix
 
-# Correct the file path by removing extra quotes and using a raw string
+# Correct file path and load data
 df = pd.read_csv(r'C:\Misc\SMSSpamCollection', sep='\t', header=None, names=['v1', 'v2'])
 
 # Display the first few rows of the dataframe
-df.head()
+print(df.head())
 
 # Check the data information
+print("\nData Information:")
 df.info()
 
+# Group by 'v1' (label) to see message statistics
+print("\nData Grouped by 'v1':")
+print(df.groupby('v1').describe())
 
-df.groupby('v1').describe()
+# Encode the 'spam' column
+df['spam'] = df['v1'].apply(lambda x: 1 if x == 'spam' else 0)
+print("\nData with 'spam' column:")
+print(df.head())
 
-df['spam'] = df['v1'].apply(lambda x:1 if x=='spam' else 0)
-df.head()
+# Create a new dataframe with the relevant columns
+new_df = df[['v1', 'v2', 'spam']]
+print("\nNew Dataframe with 'v1', 'v2', and 'spam' columns:")
+print(new_df.head())
 
-new_df = df[['v1','v2','spam']]
-new_df.head()
+# Split data into train and test sets
+x_train, x_test, y_train, y_test = tts(df['v2'], df['spam'], test_size=0.25, random_state=1)
 
-from sklearn.model_selection import train_test_split as tts
-x_train,x_test,y_train,y_test=tts(df.v2,df.spam)
-from sklearn.feature_extraction.text import CountVectorizer
-v=CountVectorizer()
-x_train_count=v.fit_transform(x_train.values)
-x_train_count.toarray()[:2]
+# Initialize CountVectorizer for feature extraction
+v = CountVectorizer()
 
-print(v)
-print(df.v2)
-print(df.spam)
+# Transform the training data into a document-term matrix
+x_train_count = v.fit_transform(x_train)
 
-from sklearn.naive_bayes import MultinomialNB
-model=MultinomialNB()
-model.fit(x_train_count,y_train)
+# Display the first two rows of the transformed data (as an array)
+print("\nFirst two rows of transformed training data (as array):")
+print(x_train_count.toarray()[:2])
 
-emails=["How are you brother?", "Free entry"]
-email_count=v.transform(emails)
-model.predict(email_count)
+# Initialize and train the Naive Bayes model
+model = MultinomialNB()
+model.fit(x_train_count, y_train)
 
-x_test_count=v.transform(x_test)
-model.score(x_test_count,y_test)
+# Test the model with a list of new emails
+emails = ["How are you brother?", "Free entry"]
+email_count = v.transform(emails)  # Transform the email texts into the same feature space
+predictions = model.predict(email_count)  # Predict using the trained model
+print("\nPredictions for new emails:", predictions)
+
+# Transform the test data and evaluate the model
+x_test_count = v.transform(x_test)
+test_accuracy = model.score(x_test_count, y_test)
+print("\nModel Accuracy on Test Data:", test_accuracy)
+
+# Evaluate the model with more detailed metrics
+y_pred = model.predict(x_test_count)
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
+print("\nConfusion Matrix:")
+print(confusion_matrix(y_test, y_pred))
