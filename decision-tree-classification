@@ -1,0 +1,66 @@
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import ConfusionMatrixDisplay, accuracy_score, classification_report
+
+# Load the dataset
+df = pd.read_csv('Admission_Predict_Ver1.1.csv')
+
+# Initial data overview
+print("First five rows of data:\n", df.head())
+print("Data shape:", df.shape)
+
+# Drop "Serial No." column as it's not needed for classification
+df = df.drop('Serial No.', axis=1)
+print("Shape after dropping 'Serial No.':", df.shape)
+
+# Convert 'Chance of Admit ' to binary classification
+df['Chance of Admit '] = np.where(df['Chance of Admit '] > 0.75, 1, 0)
+print("First five rows after binarization:\n", df.head())
+
+# Define features (X) and target (y)
+X = df[['GRE Score', 'TOEFL Score', 'University Rating', 'SOP', 'LOR ', 'CGPA', 'Research']]
+y = df['Chance of Admit ']
+
+# Split the data into training and test sets
+x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=1)
+
+# Check the shape of the training and test sets
+print("\nSize of splitted data:")
+print(f"x_train: {x_train.shape}")
+print(f"y_train: {y_train.shape}")
+print(f"x_test: {x_test.shape}")
+print(f"y_test: {y_test.shape}")
+
+# Initialize the Decision Tree Classifier
+model_dt = DecisionTreeClassifier(random_state=1)
+
+# Train the model
+model_dt.fit(x_train, y_train)
+
+# Predict with the model
+y_pred_dt = model_dt.predict(x_test)
+
+# Plot the correlation heatmap
+corr = df.corr()
+plt.figure(figsize=(8, 8))
+sns.heatmap(corr, annot=True, fmt=".2f", cmap=sns.diverging_palette(220, 10, as_cmap=True), mask=np.triu(np.ones_like(corr, dtype=bool)))
+plt.title("Correlation Heatmap")
+plt.show()
+
+# Plot regression scatter for GRE vs TOEFL scores
+plt.figure(figsize=(10, 10))
+sns.regplot(x="GRE Score", y="TOEFL Score", data=df)
+plt.title("GRE Score vs TOEFL Score")
+plt.show()
+
+# Model evaluation - Decision Tree
+ConfusionMatrixDisplay.from_predictions(y_test, y_pred_dt)
+plt.title('Decision Tree Confusion Matrix')
+plt.show()
+
+print("\nDecision Tree Accuracy:", accuracy_score(y_test, y_pred_dt))
+print(classification_report(y_test, y_pred_dt))
